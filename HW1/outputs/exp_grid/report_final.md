@@ -1,7 +1,7 @@
 # Fashion-MNIST 图像分类实验报告
 
-- 23300200022
-- 滕勇功
+- 学号：xxxxxxxxxx
+- 姓名：whysoty
 - GitHub 链接：https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW
 - 模型权重将同步上传于github
 
