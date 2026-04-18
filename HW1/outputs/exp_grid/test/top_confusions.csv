@@ -1,0 +1,6 @@
+true_class,pred_class,count,ratio_all_samples,reason_hint
+Shirt,T-shirt/top,127,0.0127,上衣类轮廓接近，边缘与纹理差异弱
+Coat,Pullover,103,0.0103,上衣类轮廓接近，边缘与纹理差异弱
+Shirt,Pullover,101,0.0101,上衣类轮廓接近，边缘与纹理差异弱
+T-shirt/top,Shirt,84,0.0084,上衣类轮廓接近，边缘与纹理差异弱
+Shirt,Coat,80,0.008,上衣类轮廓接近，边缘与纹理差异弱

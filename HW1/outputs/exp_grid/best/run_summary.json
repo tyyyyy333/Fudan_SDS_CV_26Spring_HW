@@ -1,0 +1,22 @@
+{
+  "config": {
+    "preprocess_mode": "baseline",
+    "hidden_sizes": [
+      128
+    ],
+    "activation": "tanh",
+    "dropout": 0.0,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "lr_decay": 0.95,
+    "weight_decay": 0.0001
+  },
+  "best_epoch": 19,
+  "best_val_acc": 0.8948333333333334,
+  "final_val_acc": 0.8948333333333334,
+  "final_val_loss": 0.3211929657936098,
+  "test_acc": 0.8841,
+  "test_loss": 0.3490874743700022,
+  "param_count": 101770,
+  "model_path": "outputs/exp_grid/best/best_model.npz"
+}

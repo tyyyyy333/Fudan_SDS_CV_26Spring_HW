@@ -1,0 +1,46 @@
+{
+  "best_config": {
+    "preprocess_mode": "baseline",
+    "hidden_sizes": [
+      128
+    ],
+    "activation": "tanh",
+    "dropout": 0.0,
+    "optimizer": "adam",
+    "learning_rate": 0.001,
+    "lr_decay": 0.95,
+    "weight_decay": 0.0001
+  },
+  "top_confusions": [
+    [
+      6,
+      0,
+      127,
+      0.0127
+    ],
+    [
+      4,
+      2,
+      103,
+      0.0103
+    ],
+    [
+      6,
+      2,
+      101,
+      0.0101
+    ],
+    [
+      0,
+      6,
+      84,
+      0.0084
+    ],
+    [
+      6,
+      4,
+      80,
+      0.008
+    ]
+  ]
+}
