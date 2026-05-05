@@ -3,7 +3,8 @@
 - 姓名：xxx
 - 学号：xxxxxxxx
 - 分工：本项目无具体分工，由一人独立完成
-
+- [数据集链接](https://drive.google.com/drive/folders/1TuZXeq8mo-CDsw4qRo1tio2wHgIkwvHU?usp=drive_link)
+- [github repo 链接](https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW2)
 ## Task 1 微调在ImageNet上预训练的卷积神经网络实现宠物识别
 
 ### 基本介绍
