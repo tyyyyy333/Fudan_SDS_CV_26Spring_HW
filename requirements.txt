@@ -1,0 +1,21 @@
+torch>=2.2.0
+torchvision>=0.17.0
+timm>=1.0.12
+datasets>=4.8.0
+albumentations>=1.4.18
+scikit-learn>=1.5.2
+optuna>=4.2.0
+pypdf>=5.0.0
+ultralytics>=8.2.0
+opencv-python-headless>=4.9.0
+PyYAML>=6.0.1
+numpy>=1.26.0
+tqdm>=4.66.0
+matplotlib>=3.8.0
+pandas>=2.2.0
+pillow>=10.4.0
+imageio>=2.37.0
+imageio-ffmpeg>=0.6.0
+# Optional logging tools for the report:
+wandb>=0.17.0
+# swanlab>=0.3.0

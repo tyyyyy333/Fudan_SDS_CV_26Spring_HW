@@ -1,0 +1,65 @@
+seed: 42
+device: cuda
+profile: high_score
+output_dir: outputs/task2/high_score
+save_best_by: map50_95
+export_predictions: true
+
+prepare:
+  raw_root: data/VisDrone2019-DET
+  output_root: data/visdrone_yolo
+  link_mode: copy
+  data_yaml_path: configs/visdrone_data.yaml
+
+train:
+  model: yolov8m.pt
+  data: configs/visdrone_data.yaml
+  epochs: 120
+  imgsz: 896
+  batch: 32
+  device: 0
+  workers: 16
+  project: outputs/task2/high_score_train
+  name: visdrone_yolov8m
+  pretrained: true
+  patience: 40
+  cache: false
+  overrides:
+    optimizer: SGD
+    cos_lr: true
+    hsv_h: 0.015
+    hsv_s: 0.7
+    hsv_v: 0.4
+    degrees: 0.0
+    translate: 0.1
+    scale: 0.5
+    fliplr: 0.5
+    mosaic: 0.5
+    mixup: 0.0
+
+track:
+  weights: runs/detect/outputs/task2/high_score_train/visdrone_yolov8m/weights/best.pt
+  video: data/videos/demo.mp4
+  conf: 0.25
+  iou: 0.5
+  tracker: botsort.yaml
+  classes: null
+  max_det: 300
+  line: [1150, 150, 1150, 1000]
+  save_dir: outputs/task2/high_score_track
+  counting:
+    count_once: true
+    allowed_class_ids: null
+  analysis:
+    match_iou_threshold: 0.5
+    occlusion:
+      event_radius: 2
+      max_windows: 2
+  export:
+    tracked_video_filename: tracked.mp4
+    frame_records_filename: frame_records.jsonl
+    events_filename: crossing_events.json
+    track_summary_filename: track_summary.json
+    occlusion_summary_filename: occlusion_analysis.json
+    occlusion_dir_name: occlusion_frames
+    event_dir_name: crossing_frames
