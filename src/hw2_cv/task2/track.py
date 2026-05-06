@@ -61,6 +61,33 @@ def _pick_interesting_frames(frame_records, transition_summary, crossing_events,
     return set(), "empty"
 
 
+def _detection_record(box, class_id, confidence, track_id):
+    center_x = int((box[0] + box[2]) / 2)
+    center_y = int((box[1] + box[3]) / 2)
+    return {
+        "track_id": track_id,
+        "class_id": class_id,
+        "confidence": float(confidence),
+        "box": box,
+        "center": [center_x, center_y],
+    }, center_x, center_y
+
+
+def _touch_track_state(track_states, track_id, frame_index, class_id):
+    track_state = track_states.setdefault(
+        track_id,
+        {
+            "first_frame": frame_index,
+            "last_frame": frame_index,
+            "frames_seen": 0,
+            "class_counts": {},
+        },
+    )
+    track_state["last_frame"] = frame_index
+    track_state["frames_seen"] += 1
+    track_state["class_counts"][class_id] = track_state["class_counts"].get(class_id, 0) + 1
+
+
 def _export_video_frames(video_path, selected_frames, output_dir):
     selected_frames = sorted(set(int(frame_index) for frame_index in selected_frames))
     if not selected_frames:
@@ -214,10 +241,7 @@ def run_tracking(config):
             frame = result.orig_img.copy()
             detections = []
             frame_events = []
-            boxes = []
-            class_ids = []
-            confidences = []
-            track_ids = []
+            boxes, class_ids, confidences, track_ids = [], [], [], []
 
             if result.boxes is not None and len(result.boxes) > 0:
                 boxes = result.boxes.xyxy.int().cpu().tolist()
@@ -229,32 +253,17 @@ def run_tracking(config):
                     track_ids = result.boxes.id.int().cpu().tolist()
 
                 for box, class_id, confidence, track_id in zip(boxes, class_ids, confidences, track_ids):
-                    center_x = int((box[0] + box[2]) / 2)
-                    center_y = int((box[1] + box[3]) / 2)
-                    time_seconds = frame_index / fps if fps > 0 else None
-                    detections.append(
-                        {
-                            "track_id": track_id,
-                            "class_id": class_id,
-                            "confidence": float(confidence),
-                            "box": box,
-                            "center": [center_x, center_y],
-                        }
+                    detection, center_x, center_y = _detection_record(
+                        box=box,
+                        class_id=class_id,
+                        confidence=confidence,
+                        track_id=track_id,
                     )
+                    time_seconds = frame_index / fps if fps > 0 else None
+                    detections.append(detection)
 
                     if track_id is not None:
-                        state = track_states.setdefault(
-                            track_id,
-                            {
-                                "first_frame": frame_index,
-                                "last_frame": frame_index,
-                                "frames_seen": 0,
-                                "class_counts": {},
-                            },
-                        )
-                        state["last_frame"] = frame_index
-                        state["frames_seen"] += 1
-                        state["class_counts"][class_id] = state["class_counts"].get(class_id, 0) + 1
+                        _touch_track_state(track_states, track_id, frame_index, class_id)
                         event = line_counter.update(
                             track_id=track_id,
                             center=(center_x, center_y),

@@ -36,19 +36,19 @@ def run_supervised_training(
     epoch_callback=None,
     run_test=True,
 ):
-    train_kwargs = train_kwargs or {}
-    val_kwargs = val_kwargs or {}
-    test_kwargs = test_kwargs or {}
+    trainCallKwargs = train_kwargs or {}
+    valCallKwargs = val_kwargs or {}
+    testCallKwargs = test_kwargs or {}
 
-    amp = bool(config["train"].get("amp", True))
-    scaler = torch.cuda.amp.GradScaler(enabled=amp and device.type == "cuda")
+    ampEnabled = bool(config["train"].get("amp", True))
+    scaler = torch.cuda.amp.GradScaler(enabled=ampEnabled and device.type == "cuda")
 
     best_state = None
     best_score = float("-inf")
     best_epoch = 0
     history = []
-    total_epochs = int(config["train"]["epochs"])
-    run_name = run_name or str(output_dir.name)
+    epochTotal = int(config["train"]["epochs"])
+    resolvedRunName = run_name or str(output_dir.name)
 
     early_stopping_cfg = config["train"].get("early_stopping", {})
     early_stopping_enabled = bool(early_stopping_cfg.get("enabled", False))
@@ -56,10 +56,10 @@ def run_supervised_training(
     epochs_without_improvement = 0
 
     log_info(
-        f"[train] {run_name} | device={device} | epochs={total_epochs} | output={output_dir}"
+        f"[train] {resolvedRunName} | device={device} | epochs={epochTotal} | output={output_dir}"
     )
 
-    for epoch in range(1, total_epochs + 1):
+    for epoch in range(1, epochTotal + 1):
         if before_epoch is not None:
             before_epoch(epoch, model)
 
@@ -72,17 +72,17 @@ def run_supervised_training(
             scaler=scaler,
             epoch=epoch,
             log_interval=int(config["train"].get("log_interval", 10)),
-            amp=amp,
-            **train_kwargs,
+            amp=ampEnabled,
+            **trainCallKwargs,
         )
         val_metrics = evaluate(
             model=model,
             loader=val_loader,
             criterion=criterion,
             device=device,
-            amp=amp,
+            amp=ampEnabled,
             stage=f"val {epoch}",
-            **val_kwargs,
+            **valCallKwargs,
         )
 
         if scheduler is not None:
@@ -92,7 +92,7 @@ def run_supervised_training(
 
         current_score = float(val_metrics[score_name])
         log_info(
-            f"[epoch {epoch}/{total_epochs}] "
+            f"[epoch {epoch}/{epochTotal}] "
             f"train_loss={train_metrics['loss']:.4f} "
             f"val_loss={val_metrics['loss']:.4f} "
             f"val_{score_name}={current_score:.4f}"
@@ -112,7 +112,7 @@ def run_supervised_training(
             )
             epochs_without_improvement = 0
             log_info(
-                f"[best] {run_name} | epoch={epoch} | {checkpoint_score_name}={current_score:.4f}"
+                f"[best] {resolvedRunName} | epoch={epoch} | {checkpoint_score_name}={current_score:.4f}"
             )
         else:
             epochs_without_improvement += 1
@@ -129,7 +129,7 @@ def run_supervised_training(
 
         if early_stopping_enabled and epochs_without_improvement >= early_stopping_patience:
             log_info(
-                f"[early-stop] {run_name} | epoch={epoch} | patience={early_stopping_patience}"
+                f"[early-stop] {resolvedRunName} | epoch={epoch} | patience={early_stopping_patience}"
             )
             break
 
@@ -137,7 +137,9 @@ def run_supervised_training(
         model.load_state_dict(best_state)
 
     if not run_test:
-        log_info(f"[done] {run_name} | best_epoch={best_epoch} | best_{score_name}={best_score:.4f}")
+        log_info(
+            f"[done] {resolved_run_name} | best_epoch={best_epoch} | best_{score_name}={best_score:.4f}"
+        )
         return {
             "history": history,
             "best_epoch": best_epoch,
@@ -145,18 +147,18 @@ def run_supervised_training(
             "test_metrics": None,
         }
 
-    log_info(f"[test] {run_name} | evaluating best checkpoint")
+    log_info(f"[test] {resolvedRunName} | evaluating best checkpoint")
     test_metrics = evaluate(
         model=model,
         loader=test_loader,
         criterion=criterion,
         device=device,
-        amp=amp,
+        amp=ampEnabled,
         stage="test",
-        **test_kwargs,
+        **testCallKwargs,
     )
     log_info(
-        f"[done] {run_name} | best_epoch={best_epoch} | best_{score_name}={best_score:.4f} | "
+        f"[done] {resolvedRunName} | best_epoch={best_epoch} | best_{score_name}={best_score:.4f} | "
         f"test_{score_name}={float(test_metrics[score_name]):.4f}"
     )
 

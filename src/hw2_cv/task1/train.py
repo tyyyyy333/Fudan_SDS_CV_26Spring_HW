@@ -13,9 +13,9 @@ from hw2_cv.utils import (
 
 
 def _build_mixup_fn(config):
-    augmentation_cfg = config["data"].get("augmentation", {})
-    mixup_cfg = augmentation_cfg.get("mixup", {})
-    cutmix_cfg = augmentation_cfg.get("cutmix", {})
+    augmentCfg = config["data"].get("augmentation", {})
+    mixup_cfg = augmentCfg.get("mixup", {})
+    cutmix_cfg = augmentCfg.get("cutmix", {})
 
     mixup_alpha = float(mixup_cfg.get("alpha", 0.0))
     cutmix_alpha = float(cutmix_cfg.get("alpha", 0.0))
@@ -57,11 +57,11 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
     if config.get("save_best_by", "val_acc") != "val_acc":
         raise ValueError("Task 1 only supports save_best_by=val_acc.")
 
-    data = build_dataloaders(config)
+    dataLoaders = build_dataloaders(config)
     model = build_model(config, num_classes=NUM_CLASSES).to(device)
 
-    freeze_epochs = int(config["train"].get("freeze_backbone_epochs", 0))
-    if freeze_epochs > 0:
+    backboneFreezeEpochs = int(config["train"].get("freeze_backbone_epochs", 0))
+    if backboneFreezeEpochs > 0:
         set_backbone_trainable(model, False)
 
     criterion = nn.CrossEntropyLoss(
@@ -72,8 +72,11 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
     mixup_fn = _build_mixup_fn(config)
 
     def before_epoch(epoch, current_model):
-        if freeze_epochs > 0 and epoch == freeze_epochs + 1:
+        if backboneFreezeEpochs > 0 and epoch == backboneFreezeEpochs + 1:
             set_backbone_trainable(current_model, True)
+
+    evaluationCfg = config.get("evaluation", {})
+    runLabel = f"task1/{config['model']['variant']}/{config['profile']}"
 
     result = run_supervised_training(
         config=config,
@@ -83,9 +86,9 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
-        train_loader=data["train_loader"],
-        val_loader=data["val_loader"],
-        test_loader=data["test_loader"],
+        train_loader=dataLoaders["train_loader"],
+        val_loader=dataLoaders["val_loader"],
+        test_loader=dataLoaders["test_loader"],
         train_one_epoch=train_one_epoch,
         evaluate=evaluate,
         score_name="acc",
@@ -95,10 +98,10 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         val_kwargs={"collect_outputs": False},
         test_kwargs={
             "collect_outputs": True,
-            "tta_horizontal_flip": bool(config.get("evaluation", {}).get("tta_horizontal_flip", False)),
+            "tta_horizontal_flip": bool(evaluationCfg.get("tta_horizontal_flip", False)),
         },
         before_epoch=before_epoch,
-        run_name=f"task1/{config['model']['variant']}/{config['profile']}",
+        run_name=runLabel,
         epoch_callback=epoch_callback,
         run_test=run_test,
     )
@@ -111,7 +114,7 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         "output_dir": str(output_dir),
         "device": str(device),
         "profile": config["profile"],
-        "dataset_source": data["dataset_source"],
+        "dataset_source": dataLoaders["dataset_source"],
         "family": config["model"]["family"],
         "variant": config["model"]["variant"],
         "pretrained": bool(config["model"].get("pretrained", True)),
@@ -120,7 +123,7 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         "dropout": float(config["model"].get("dropout", 0.0)),
         "optimizer_name": str(config["optimizer"].get("name", "adamw")),
         "epochs": int(config["train"]["epochs"]),
-        "freeze_backbone_epochs": freeze_epochs,
+        "freeze_backbone_epochs": backboneFreezeEpochs,
         "label_smoothing": float(config["train"].get("label_smoothing", 0.0)),
         "early_stopping_enabled": bool(config["train"].get("early_stopping", {}).get("enabled", False)),
         "early_stopping_patience": int(config["train"].get("early_stopping", {}).get("patience", 0)),
@@ -131,7 +134,7 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         ),
         "mixup_alpha": float(config["data"].get("augmentation", {}).get("mixup", {}).get("alpha", 0.0)),
         "cutmix_alpha": float(config["data"].get("augmentation", {}).get("cutmix", {}).get("alpha", 0.0)),
-        "tta_horizontal_flip": bool(config.get("evaluation", {}).get("tta_horizontal_flip", False)),
+        "tta_horizontal_flip": bool(evaluationCfg.get("tta_horizontal_flip", False)),
         "best_epoch": best_epoch,
         "best_val_acc": best_value,
         "test_acc": None if test_metrics is None else test_metrics["acc"],
@@ -146,11 +149,11 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         targets = [record["target"] for record in records]
         predictions = [record["prediction"] for record in records]
         confusion = confusion_matrix(targets, predictions, num_classes=NUM_CLASSES)
-        class_accuracy = classwise_accuracy(confusion, data["class_names"])
+        class_accuracy = classwise_accuracy(confusion, dataLoaders["class_names"])
         misclassified = top_misclassified_samples(
             records,
-            class_names=data["class_names"],
-            top_k=int(config.get("evaluation", {}).get("top_k_misclassified", 30)),
+            class_names=dataLoaders["class_names"],
+            top_k=int(evaluationCfg.get("top_k_misclassified", 30)),
         )
         save_json(confusion, output_dir / "confusion_matrix.json")
         save_json(class_accuracy, output_dir / "class_accuracy.json")

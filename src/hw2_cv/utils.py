@@ -15,9 +15,9 @@ def log_info(message):
 
 
 def ensure_dir(path):
-    resolved = Path(path)
-    resolved.mkdir(parents=True, exist_ok=True)
-    return resolved
+    target_dir = Path(path)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    return target_dir
 
 
 def load_yaml(path):
@@ -29,16 +29,16 @@ def load_yaml(path):
 
 
 def save_json(payload, path):
-    destination = Path(path)
-    ensure_dir(destination.parent)
-    with destination.open("w", encoding="utf-8") as handle:
+    output_path = Path(path)
+    ensure_dir(output_path.parent)
+    with output_path.open("w", encoding="utf-8") as handle:
         json.dump(payload, handle, indent=2, ensure_ascii=False)
 
 
 def save_jsonl(rows, path):
-    destination = Path(path)
-    ensure_dir(destination.parent)
-    with destination.open("w", encoding="utf-8") as handle:
+    output_path = Path(path)
+    ensure_dir(output_path.parent)
+    with output_path.open("w", encoding="utf-8") as handle:
         for row in rows:
             handle.write(json.dumps(row, ensure_ascii=False) + "\n")
 
@@ -54,19 +54,19 @@ def deep_update(base, overrides):
 
 
 def resolve_profile_config(config):
-    merged = deepcopy(config)
-    selected_profile = merged.get("profile", "high_score")
-    profiles = merged.pop("profiles", {})
-    if selected_profile in profiles:
-        merged = deep_update(merged, profiles[selected_profile])
-    merged["profile"] = selected_profile
-    return merged
+    resolved_config = deepcopy(config)
+    profile_name = resolved_config.get("profile", "high_score")
+    profile_overrides = resolved_config.pop("profiles", {})
+    if profile_name in profile_overrides:
+        resolved_config = deep_update(resolved_config, profile_overrides[profile_name])
+    resolved_config["profile"] = profile_name
+    return resolved_config
 
 
 def save_yaml(payload, path):
-    destination = Path(path)
-    ensure_dir(destination.parent)
-    with destination.open("w", encoding="utf-8") as handle:
+    output_path = Path(path)
+    ensure_dir(output_path.parent)
+    with output_path.open("w", encoding="utf-8") as handle:
         yaml.safe_dump(payload, handle, allow_unicode=True, sort_keys=False)
 
 
@@ -92,11 +92,11 @@ def resolve_device(requested="cuda"):
 
 
 def prepare_run(config, default_device="cuda"):
-    config = resolve_profile_config(config)
-    set_seed(int(config.get("seed", 42)))
-    output_dir = ensure_dir(config["output_dir"])
-    device = resolve_device(config.get("device", default_device))
-    return config, output_dir, device
+    resolved_config = resolve_profile_config(config)
+    set_seed(int(resolved_config.get("seed", 42)))
+    output_dir = ensure_dir(resolved_config["output_dir"])
+    device = resolve_device(resolved_config.get("device", default_device))
+    return resolved_config, output_dir, device
 
 
 def build_warmup_cosine_scheduler(

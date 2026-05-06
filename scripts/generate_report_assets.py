@@ -49,8 +49,8 @@ def apply_style():
     )
 
 
-def save_fig(path):
-    plt.tight_layout()
+def save_fig(path, rect=None):
+    plt.tight_layout(rect=rect)
     plt.savefig(path, dpi=320, bbox_inches="tight")
     plt.close()
 
@@ -74,29 +74,6 @@ def style_axis(ax):
     ax.spines["left"].set_linewidth(1.1)
     ax.spines["bottom"].set_linewidth(1.1)
     ax.tick_params(axis="both", labelsize=11)
-
-
-def draw_box(draw, xy, text, fill, outline=INK, radius=14):
-    draw.rounded_rectangle(xy, radius=radius, fill=fill, outline=outline, width=3)
-    x0, y0, x1, y1 = xy
-    draw.multiline_text((x0 + 16, y0 + 14), text, fill=INK, spacing=6)
-
-
-def draw_arrow(draw, start, end, fill=INK, width=5):
-    draw.line([start, end], fill=fill, width=width)
-    ex, ey = end
-    sx, sy = start
-    dx = ex - sx
-    dy = ey - sy
-    if abs(dx) >= abs(dy):
-        sign = 1 if dx >= 0 else -1
-        p1 = (ex - 14 * sign, ey - 9)
-        p2 = (ex - 14 * sign, ey + 9)
-    else:
-        sign = 1 if dy >= 0 else -1
-        p1 = (ex - 9, ey - 14 * sign)
-        p2 = (ex + 9, ey - 14 * sign)
-    draw.polygon([end, p1, p2], fill=fill)
 
 
 def task1_model_comparison():
@@ -127,23 +104,6 @@ def task1_model_comparison():
     annotate_bars(ax, bars2, "{:.1f}", 0.5)
     ax.legend(frameon=False, ncol=2, loc="upper left")
     save_fig(ASSET_DIR / "task1_model_comparison.png")
-
-
-def task1_model_structure():
-    canvas = Image.new("RGB", (1600, 520), BG)
-    draw = ImageDraw.Draw(canvas)
-    draw.text((32, 24), "Task 1  Backbone Variants", fill=INK)
-
-    boxes = [
-        ((40, 90, 500, 430), "Baseline / SE / CBAM\n\nInput 256x256\nStem Conv7x7\nResNet34 stages\n[3, 4, 6, 3]\nGlobal AvgPool\nDropout + FC37\n\nSE  add channel squeeze-excitation\nCBAM  add channel + spatial attention", "#dbe7f2"),
-        ((570, 90, 1030, 430), "Swin-Tiny\n\nPatch4 embedding\nWindow MSA blocks\nHierarchical stages\nPatch merging\nGlobal pooling\nLinear classifier 37\n\nPretrained on ImageNet", "#efe3d2"),
-        ((1100, 90, 1560, 430), "Fine-tuning policy\n\nBackbone LR 5e-5\nHead LR 5e-4\nAdamW\nWarmup + Cosine\nMixup + CutMix\nTTA horizontal flip\nOptuna tunes LR / freeze / epochs", "#dfeadf"),
-    ]
-    for xy, text, fill in boxes:
-        draw_box(draw, xy, text, fill)
-    draw_arrow(draw, (500, 260), (570, 260))
-    draw_arrow(draw, (1030, 260), (1100, 260))
-    canvas.save(ASSET_DIR / "task1_model_structure.png")
 
 
 def task1_history():
@@ -198,11 +158,11 @@ def task1_tune_trials():
     ax1.set_ylabel("Best Val Acc (%)")
     ax1.set_ylim(92, 96)
     style_axis(ax1)
-    ax1.set_title("Task 1  Tuning Trials")
+    fig.suptitle("Task 1  Tuning Trials", y=0.75, fontsize=14, fontweight="bold")
     annotate_bars(ax1, bars, "{:.1f}", 0.08)
 
     ax2 = ax1.twinx()
-    ax2.plot(labels, head_lr, color=RED, marker="o", markersize=6, linewidth=2.5, label="Head LR")
+    ax2.plot(labels, head_lr, color=RED, marker="o", markersize=6, linewidth=2.5, alpha=0.5, label="Head LR")
     ax2.set_ylabel("Head LR")
     ax2.set_yscale("log")
 
@@ -235,9 +195,15 @@ def task1_tune_trials():
         for frz, marker in freeze_markers.items()
     ]
     lr_handle = [Line2D([0], [0], color=RED, linewidth=2.5, marker="o", label="Head LR")]
-    ax1.legend(handles=epoch_handles + freeze_handles + lr_handle, frameon=False, ncol=4, loc="upper center", bbox_to_anchor=(0.5, 1.15))
+    ax1.legend(
+        handles=epoch_handles + freeze_handles + lr_handle,
+        frameon=False,
+        ncol=4,
+        loc="upper center",
+        bbox_to_anchor=(0.5, 1.22),
+    )
 
-    save_fig(ASSET_DIR / "task1_tune_trials.png")
+    save_fig(ASSET_DIR / "task1_tune_trials.png", rect=[0, 0, 1, 0.86])
 
 
 def task2_detection_metrics():
@@ -277,24 +243,6 @@ def task2_detection_metrics():
     )
     annotate_bars(ax, bars, "{:.3f}", 0.015)
     save_fig(ASSET_DIR / "task2_detector_metrics.png")
-
-
-def task2_model_structure():
-    canvas = Image.new("RGB", (1700, 500), BG)
-    draw = ImageDraw.Draw(canvas)
-    draw.text((32, 24), "Task 2  Detection and Tracking Pipeline", fill=INK)
-    boxes = [
-        ((40, 130, 300, 370), "VisDrone train/val\n+\ndemo.mp4", "#dbe7f2"),
-        ((370, 130, 660, 370), "YOLOv8m detector\n\n896 input\nSGD\n120 epochs\nPredict boxes + classes", "#efe3d2"),
-        ((730, 130, 1020, 370), "BoT-SORT tracker\n\nKalman prediction\nIoU matching\nReID appearance\nTrack IDs", "#dfeadf"),
-        ((1090, 130, 1380, 370), "Scene analysis\n\nCrossing events\nID switch / lost\nFrame records\nTransition windows", "#f2dede"),
-        ((1450, 130, 1660, 370), "Outputs\n\ntracked.mp4\ncrossing_frames\nocclusion_frames\nsummary.json", "#e3e0f3"),
-    ]
-    for xy, text, fill in boxes:
-        draw_box(draw, xy, text, fill)
-    for x0, x1 in [(300, 370), (660, 730), (1020, 1090), (1380, 1450)]:
-        draw_arrow(draw, (x0, 250), (x1, 250))
-    canvas.save(ASSET_DIR / "task2_model_structure.png")
 
 
 def task2_training_curves():
@@ -377,35 +325,11 @@ def task3_loss_comparison():
     ax.set_ylabel("Score")
     ax.set_title("Task 3  Loss Comparison")
     style_axis(ax)
-    ax.legend(frameon=False, ncol=3, loc="upper left")
+    ax.legend(frameon=False, ncol=1, loc="upper right", bbox_to_anchor=(1.15, 1))
     annotate_bars(ax, bars1, "{:.3f}", 0.01)
     annotate_bars(ax, bars2, "{:.3f}", 0.01)
     annotate_bars(ax, bars3, "{:.3f}", 0.01)
     save_fig(ASSET_DIR / "task3_loss_comparison.png")
-
-
-def task3_model_structure():
-    canvas = Image.new("RGB", (1760, 540), BG)
-    draw = ImageDraw.Draw(canvas)
-    draw.text((32, 24), "Task 3  U-Net Architecture", fill=INK)
-    boxes = [
-        ((40, 140, 240, 380), "Input\n3 x 256 x 256", "#dbe7f2"),
-        ((300, 90, 540, 430), "Encoder\n\nDoubleConv 64\nDown 128\nDown 256\nDown 512", "#efe3d2"),
-        ((620, 150, 840, 370), "Bottleneck\n\nDown 1024\nDropout 0.2", "#f2dede"),
-        ((920, 90, 1160, 430), "Decoder\n\nUp 512\nUp 256\nUp 128\nUp 64", "#dfeadf"),
-        ((1240, 140, 1460, 380), "Output\n1x1 Conv\n3 classes", "#e3e0f3"),
-        ((1510, 110, 1720, 410), "Skip connections\n\nConcat encoder\nfeatures at each scale\nfor boundary recovery", "#f5eac8"),
-    ]
-    for xy, text, fill in boxes:
-        draw_box(draw, xy, text, fill)
-    for x0, x1 in [(240, 300), (540, 620), (840, 920), (1160, 1240)]:
-        draw_arrow(draw, (x0, 260), (x1, 260))
-    draw_arrow(draw, (540, 160), (920, 160))
-    draw_arrow(draw, (540, 230), (920, 230))
-    draw_arrow(draw, (540, 300), (920, 300))
-    draw_arrow(draw, (540, 370), (920, 370))
-    draw_arrow(draw, (1460, 260), (1510, 260))
-    canvas.save(ASSET_DIR / "task3_model_structure.png")
 
 
 def task3_training_curves():
@@ -489,16 +413,13 @@ def task3_visual_panel():
 
 
 def main():
-    task1_model_structure()
     task1_model_comparison()
     task1_history()
     task1_tune_trials()
-    task2_model_structure()
     task2_detection_metrics()
     task2_training_curves()
     task2_tracking_summary()
     task2_visual_panel()
-    task3_model_structure()
     task3_loss_comparison()
     task3_training_curves()
     task3_visual_panel()

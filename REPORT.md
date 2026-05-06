@@ -1,10 +1,11 @@
 # 计算机视觉期中作业报告
 
 - 姓名：xxx
-- 学号：xxxxxxxx
+- 学号：xxxxxx
 - 分工：本项目无具体分工，由一人独立完成
 - [数据集链接](https://drive.google.com/drive/folders/1TuZXeq8mo-CDsw4qRo1tio2wHgIkwvHU?usp=drive_link)
 - [github repo 链接](https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW2)
+
 ## Task 1 微调在ImageNet上预训练的卷积神经网络实现宠物识别
 
 ### 基本介绍
@@ -12,6 +13,10 @@
 - Task 1 以 Oxford-IIIT Pet 37 类宠物品种分类为目标，预训练卷积网络微调，并围绕题目要求补充预训练消融、注意力机制和 Transformer 结构对比
 - 数据源来自本地 parquet 版本 Oxford-IIIT Pet，训练与验证样本从 `trainval` 划分，测试集使用官方 `test` split
 - 最终最优模型是 `Swin-Tiny`，测试集准确率达到 `93.21%`，显著高于卷积基线
+- 模型结构：
+  - 卷积基线采用 `ResNet34`，主干由残差块堆叠组成，先通过卷积与下采样逐步扩大感受野，再经过全局平均池化和线性分类头输出 37 类概率
+  - `SE-ResNet34` 在残差块后加入通道注意力，对不同通道特征做自适应重标定；`CBAM-ResNet34` 进一步叠加空间注意力，使网络同时关注更重要的通道和位置区域
+  - `Swin-Tiny` 则使用分层 Transformer 结构，以 patch embedding 作为输入表示，在局部窗口自注意力与窗口平移机制下逐层提取更强的全局上下文特征，最后通过池化和线性层完成分类
 
 | 实验标签                     | 结构           | 预训练 | 测试集准确率 |
 | ---------------------------- | -------------- | -----: | -----------: |
@@ -54,7 +59,7 @@
 | 权重衰减        | `1e-4`                                                      |
 | 训练 epoch      | 50                                                            |
 | 冻结策略        | `freeze_backbone_epochs = 0`                                |
-| 损失函数        | Cross Entropy(label_smoothing = 0.05)                      |
+| 损失函数        | Cross Entropy(label_smoothing = 0.05)                         |
 | 调度器          | Warmup 3 epoch + Cosine                                       |
 | 混合增强        | Mixup `0.2`，CutMix `1.0`                                 |
 | 图像增强        | RandomResizedCrop、HorizontalFlip、ColorJitter、RandomErasing |
@@ -117,6 +122,9 @@
 
 - Task 2 由两个阶段组成，第一阶段在 VisDrone2019-DET 上训练检测器，第二阶段把最佳权重用于本地 `demo.mp4` 视频跟踪，再完成遮挡与 ID 跳变分析以及越线计数
 - 检测器采用 `YOLOv8m`，跟踪器采用 `BoT-SORT`，最终检测模型在验证集上达到 `mAP50 = 0.5069`、`mAP50-95 = 0.3092`，视频跟踪阶段在新视频上统计到 `3` 次越线事件，同时在自动选中的分析窗口中检测到 `2` 次 ID switch 和 `13` 次 lost 事件
+- 模型结构：
+  - 检测阶段采用 `YOLOv8m` 单阶段检测器，整体由 backbone、neck 和 detection head 组成；主干网络负责提取多尺度语义特征，neck 融合不同分辨率特征图，检测头直接回归边界框并预测类别置信度
+  - 跟踪阶段使用 `BoT-SORT` 在逐帧检测结果之上完成跨帧关联，其中卡尔曼滤波负责运动状态预测，IoU 与外观特征共同用于匹配当前检测框和历史轨迹，从而为每个目标维持相对稳定的 track ID
 - *BoT-SORT 核心思路：先利用检测器得到每帧候选框，再结合卡尔曼滤波的运动预测、IoU 匹配以及 ReID 外观特征完成跨帧关联，因此它在目标间距较大时能稳定维持 ID，但在密集遮挡、外观相似和短时失检场景中仍然可能出现轨迹中断或 ID 重新分配
 
 | 模块     | 最终结果                                  |
