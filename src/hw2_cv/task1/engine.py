@@ -6,7 +6,7 @@ from hw2_cv.runner import autocast_context
 
 
 def _classification_loss(criterion, logits, targets):
-    if targets.ndim == 2:
+    if targets.ndim == 2 and not bool(getattr(criterion, "supports_soft_targets", False)):
         log_probs = F.log_softmax(logits, dim=1)
         return -(targets * log_probs).sum(dim=1).mean()
     return criterion(logits, targets)

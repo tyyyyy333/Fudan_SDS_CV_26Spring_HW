@@ -1,8 +1,7 @@
-from torch import nn
-
 from hw2_cv.runner import run_supervised_training
 from hw2_cv.task1.data import NUM_CLASSES, build_dataloaders
 from hw2_cv.task1.engine import evaluate, train_one_epoch
+from hw2_cv.task1.losses import build_criterion
 from hw2_cv.task1.models import build_model, build_optimizer, set_backbone_trainable
 from hw2_cv.task1.reporting import classwise_accuracy, confusion_matrix, top_misclassified_samples
 from hw2_cv.utils import (
@@ -64,9 +63,7 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
     if backboneFreezeEpochs > 0:
         set_backbone_trainable(model, False)
 
-    criterion = nn.CrossEntropyLoss(
-        label_smoothing=float(config["train"].get("label_smoothing", 0.0))
-    ).to(device)
+    criterion = build_criterion(config).to(device)
     optimizer = build_optimizer(model, config)
     scheduler = build_scheduler(optimizer, config, float(config["optimizer"]["head_lr"]))
     mixup_fn = _build_mixup_fn(config)
@@ -125,6 +122,9 @@ def run_training_with_options(config, run_test=True, write_reports=True, epoch_c
         "epochs": int(config["train"]["epochs"]),
         "freeze_backbone_epochs": backboneFreezeEpochs,
         "label_smoothing": float(config["train"].get("label_smoothing", 0.0)),
+        "loss_name": str(config.get("loss", {}).get("name", "ce")),
+        "focal_gamma": float(config.get("loss", {}).get("gamma", 0.0)),
+        "focal_weight": float(config.get("loss", {}).get("focal_weight", 0.0)),
         "early_stopping_enabled": bool(config["train"].get("early_stopping", {}).get("enabled", False)),
         "early_stopping_patience": int(config["train"].get("early_stopping", {}).get("patience", 0)),
         "head_lr": float(config["optimizer"]["head_lr"]),

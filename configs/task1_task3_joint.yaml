@@ -1,0 +1,62 @@
+seed: 42
+device: cuda
+profile: joint_seg_guided
+output_dir: outputs/task1_task3_joint/soft_pet_border_resnet34
+save_best_by: val_acc
+
+data:
+  root: data/oxford_iiit_pet_hf_seg
+  download: false
+  image_size: 256
+  batch_size: 48
+  num_workers: 8
+  val_ratio: 0.2
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  augmentation:
+    horizontal_flip_prob: 0.5
+    shift_scale_rotate:
+      enabled: false
+    color_jitter:
+      enabled: false
+
+segmentation:
+  config: configs/task3_unet.yaml
+  checkpoint: outputs/task3/ce_dice/best.pt
+  loss_weight: 0.25
+
+guidance:
+  mode: soft_pet_border_dim_background
+  background_scale: 0.15
+
+classifier:
+  family: resnet
+  variant: resnet34
+  pretrained: true
+  weights_path: null
+  dropout: 0.1
+  attention_reduction: 16
+  attention_spatial_kernel_size: 7
+
+optimizer:
+  name: adamw
+  classifier_head_lr: 0.0005
+  classifier_backbone_lr: 0.00005
+  segmentation_lr: 0.00002
+  weight_decay: 0.0001
+
+scheduler:
+  name: cosine
+  warmup_epochs: 3
+  warmup_start_factor: 0.1
+  min_lr_ratio: 0.01
+
+train:
+  epochs: 20
+  label_smoothing: 0.05
+  amp: true
+  log_interval: 20
+
+evaluation:
+  tta_horizontal_flip: true

@@ -1,0 +1,101 @@
+seed: 42
+device: cuda
+profile: focal_full_recipe
+output_dir: outputs/task1_focal_ablation/full_recipe_base
+save_best_by: val_acc
+export_predictions: false
+
+data:
+  root: data/oxford-iiit-pet
+  download: false
+  image_size: 256
+  batch_size: 64
+  num_workers: 8
+  val_ratio: 0.2
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+  evaluation:
+    resize_ratio: 1.14
+  augmentation:
+    random_resized_crop: true
+    crop_scale: [0.85, 1.0]
+    crop_ratio: [0.75, 1.3333333333]
+    horizontal_flip_prob: 0.5
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.0
+    randaugment:
+      enabled: false
+      num_ops: 2
+      magnitude: 7
+    mixup:
+      alpha: 0.2
+      probability: 1.0
+      mode: batch
+    cutmix:
+      alpha: 1.0
+      switch_probability: 0.5
+    random_erasing:
+      enabled: true
+      probability: 0.1
+      scale: [0.02, 0.1]
+      ratio: [0.3, 3.3]
+
+model:
+  family: resnet
+  variant: resnet34
+  pretrained: true
+  weights_path: null
+  attention_reduction: 16
+  attention_spatial_kernel_size: 7
+  dropout: 0.1
+  drop_path_rate: 0.0
+
+optimizer:
+  name: adamw
+  head_lr: 0.0005
+  backbone_lr: 0.00005
+  weight_decay: 0.0001
+  betas: [0.9, 0.999]
+  momentum: 0.9
+  nesterov: true
+
+scheduler:
+  name: cosine
+  warmup_epochs: 3
+  warmup_start_factor: 0.1
+  min_lr_ratio: 0.01
+
+train:
+  epochs: 30
+  freeze_backbone_epochs: 0
+  label_smoothing: 0.05
+  amp: true
+  log_interval: 20
+  early_stopping:
+    enabled: false
+    patience: 10
+
+loss:
+  name: focal
+  gamma: 2.0
+  focal_weight: 0.5
+
+evaluation:
+  top_k_misclassified: 30
+  tta_horizontal_flip: true
+
+sweep:
+  experiments:
+    - tag: full_recipe_focal_g2_soft
+      loss:
+        name: focal
+        gamma: 2.0
+    - tag: full_recipe_ce_focal_g2_w03_soft
+      loss:
+        name: ce_focal
+        gamma: 2.0
+        focal_weight: 0.3
