@@ -33,8 +33,29 @@ This ablation uses the same backbone and optimizer setting across runs:
 | RandomResizedCrop + HFlip + ColorJitter + RandomErasing + MixUp/CutMix | 0.896975 | 0.902153 | +0.005179 |
 | RandomResizedCrop + HFlip + ColorJitter + MixUp/CutMix | 0.896157 | 0.898610 | +0.002453 |
 
+## Stronger TTA and TTT
+
+The stronger TTA setting averages six views: scales 0.875, 1.0, and 1.125, each with and without horizontal flip. TTT uses unlabeled entropy minimization at test time and updates only BatchNorm affine parameters.
+
+| setting | test acc | test loss |
+| --- | ---: | ---: |
+| RandomResizedCrop + HFlip TTA | 0.920142 | 0.669896 |
+| RandomResizedCrop + scale/HFlip TTA | 0.917144 | 0.687769 |
+| RandomResizedCrop + HFlip TTA + TTT, lr=1e-3 | 0.922050 | 0.634769 |
+| RandomResizedCrop + train HFlip + HFlip TTA | 0.920959 | 0.658422 |
+| RandomResizedCrop + train HFlip + scale/HFlip TTA | 0.919052 | 0.672995 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, lr=1e-5 | 0.916053 | 0.664087 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, lr=1e-4 | 0.918779 | 0.651450 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, lr=5e-4 | 0.925048 | 0.630322 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, lr=1e-3 | 0.925593 | 0.628310 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, lr=2e-3 | 0.923685 | 0.644925 |
+| RandomResizedCrop + train HFlip + HFlip TTA + TTT, 2 steps, lr=1e-3 | 0.922595 | 0.641236 |
+| RandomResizedCrop + train HFlip + scale/HFlip TTA + TTT, lr=5e-4 | 0.923957 | 0.642208 |
+
 ## Takeaways
 
 The strongest training-time augmentation in this controlled 30-epoch sweep is RandomResizedCrop, improving test accuracy by about 0.60 percentage points over the no-augmentation baseline. Adding horizontal flip improves validation accuracy and gives the best final result when paired with horizontal-flip TTA.
 
 MixUp/CutMix and RandAugment are too strong under this short training setup. They can increase validation accuracy in some runs, but they reduce test accuracy substantially, suggesting that they need longer training or retuned learning-rate/regularization settings.
+
+Stronger multi-scale TTA does not help on this setup; it underperforms simple horizontal-flip TTA. TTT is more effective: the best configuration is RandomResizedCrop + train-time HFlip + HFlip TTA + one entropy-minimization step with `lr=1e-3`, reaching 0.925593 test accuracy.
