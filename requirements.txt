@@ -1,0 +1,9 @@
+numpy>=1.24
+torch>=2.0
+torchvision>=0.15
+Pillow>=9.0
+PyYAML>=6.0
+pytest>=8.0
+rembg>=0.1.30          # background removal for object_c
+wandb>=0.15            # experiment logging
+tensorboard>=2.12      # training metrics

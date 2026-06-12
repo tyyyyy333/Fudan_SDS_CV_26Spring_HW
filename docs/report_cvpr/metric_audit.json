@@ -1,0 +1,270 @@
+{
+  "task1": {
+    "object_a": {
+      "registered_cameras": 469,
+      "gaussians_raw": 66136,
+      "gaussians_supported": 42800,
+      "support_cache_cameras": 469,
+      "test_l1": 0.008765956675002382,
+      "test_psnr_db": 30.40352879540395,
+      "train_l1": 0.005978075228631497,
+      "train_psnr_db": 30.18334083557129,
+      "optimization_loop_seconds": 535,
+      "end_to_end_log_span_seconds": 559
+    },
+    "object_b": {
+      "steps": 10000,
+      "training_seconds": 2328
+    },
+    "object_c": {
+      "coarse_training_minutes": 29.2821,
+      "fine_training_minutes": 15.4947,
+      "combined_training_minutes": 44.7768,
+      "coarse_log_span_seconds": 1908,
+      "fine_log_span_seconds": 1230,
+      "pipeline_training_start_to_final_export_seconds": 3080
+    }
+  },
+  "task2": {
+    "full_d": {
+      "examples": 92274,
+      "b_only_l1": 0.5089893496622796,
+      "abc_l1": 0.4194019763371821,
+      "l1_relative_improvement_percent": 17.60103102049969,
+      "total_loss_relative_improvement_percent": 17.858453229826075
+    },
+    "chunk_subset_d": {
+      "examples": 8192,
+      "b_only_l1": 0.5440004137962934,
+      "abc_l1": 0.4466794037856248,
+      "b_only_arm_cosine": 0.5353812805699887,
+      "abc_arm_cosine": 0.6527005643991036,
+      "b_only_tail_head_ratio": 0.9998235323073213,
+      "abc_tail_head_ratio": 1.0170283815558905,
+      "b_only_variation_ratio": 0.42527453701794377,
+      "abc_variation_ratio": 0.5848793531574791
+    },
+    "paired_clean_d": {
+      "mean_difference": 0.09698314434069855,
+      "ci95_low": 0.07269703979886842,
+      "ci95_high": 0.12220593958016703,
+      "paired_effect_size_dz": 0.6733560546853944
+    },
+    "visual_shift_b_to_d": {
+      "observation.images.image": {
+        "histogram_js_per_channel": [
+          0.001086733291984662,
+          0.0014616754062744372,
+          0.0014661060186543255
+        ],
+        "histogram_js_mean": 0.0013381715723044748,
+        "mean_rgb_l2": 0.019856317079388664,
+        "mean_luminance_B": 0.556385984721904,
+        "mean_luminance_D": 0.5453778489027172
+      },
+      "observation.images.wrist_image": {
+        "histogram_js_per_channel": [
+          0.0033759584566517642,
+          0.0035943034851578337,
+          0.003063841459245143
+        ],
+        "histogram_js_mean": 0.0033447011336849137,
+        "mean_rgb_l2": 0.047995492132581766,
+        "mean_luminance_B": 0.5340309869498014,
+        "mean_luminance_D": 0.5065619834931567
+      }
+    },
+    "controlled_perturbations": {
+      "B-only": {
+        "clean": {
+          "l1": 0.5440004137962934,
+          "relative_degradation_pct": 0.0,
+          "prediction_drift_l1": 0.0,
+          "tail_head_ratio": 0.9998235323073213,
+          "endpoint_amplification": 1.0138213028693366,
+          "delta_action_l1": 0.23246906719901975
+        },
+        "dark": {
+          "l1": 0.5576270467616847,
+          "relative_degradation_pct": 2.504893860337032,
+          "prediction_drift_l1": 0.22864600593896128,
+          "tail_head_ratio": 0.9933037996165823,
+          "endpoint_amplification": 1.0054197028540441,
+          "delta_action_l1": 0.23136438150688338
+        },
+        "bright": {
+          "l1": 0.5630011480309,
+          "relative_degradation_pct": 3.4927793716204025,
+          "prediction_drift_l1": 0.23122889418344394,
+          "tail_head_ratio": 1.0013042122749063,
+          "endpoint_amplification": 1.0154480182494612,
+          "delta_action_l1": 0.23395604763177985
+        },
+        "low_contrast": {
+          "l1": 0.5532201126386262,
+          "relative_degradation_pct": 1.694796292156009,
+          "prediction_drift_l1": 0.2552606471397293,
+          "tail_head_ratio": 0.9899127370611835,
+          "endpoint_amplification": 0.9994685561601117,
+          "delta_action_l1": 0.23300888558004076
+        },
+        "warm_color": {
+          "l1": 0.5524110963903,
+          "relative_degradation_pct": 1.5460801831588489,
+          "prediction_drift_l1": 0.23785859666586054,
+          "tail_head_ratio": 0.9876360659471121,
+          "endpoint_amplification": 0.9988045457684894,
+          "delta_action_l1": 0.23215315093182493
+        },
+        "blur": {
+          "l1": 0.6468034076256998,
+          "relative_degradation_pct": 18.89759478526831,
+          "prediction_drift_l1": 0.4695369917322902,
+          "tail_head_ratio": 1.024881385365431,
+          "endpoint_amplification": 1.0352973699799581,
+          "delta_action_l1": 0.23814614721602514
+        },
+        "noise": {
+          "l1": 0.6237852255380372,
+          "relative_degradation_pct": 14.666314531815793,
+          "prediction_drift_l1": 0.4226698323866375,
+          "tail_head_ratio": 1.0225679310217421,
+          "endpoint_amplification": 1.0363120867680296,
+          "delta_action_l1": 0.23600996310871333
+        },
+        "camera_shift": {
+          "l1": 0.5992256406833759,
+          "relative_degradation_pct": 10.151688397016944,
+          "prediction_drift_l1": 0.34460489383307885,
+          "tail_head_ratio": 0.9997194084482519,
+          "endpoint_amplification": 1.0127195753118445,
+          "delta_action_l1": 0.23705704103337408
+        },
+        "center_occlusion": {
+          "l1": 0.5918271373676296,
+          "relative_degradation_pct": 8.791670439656208,
+          "prediction_drift_l1": 0.3984772278151044,
+          "tail_head_ratio": 1.0273806005757302,
+          "endpoint_amplification": 1.0419363773453665,
+          "delta_action_l1": 0.23265590121218171
+        },
+        "static_drop": {
+          "l1": 0.5651192656228625,
+          "relative_degradation_pct": 3.8821389269158457,
+          "prediction_drift_l1": 0.31809219316300114,
+          "tail_head_ratio": 1.039069032821522,
+          "endpoint_amplification": 1.0522730557982252,
+          "delta_action_l1": 0.23298884181273552
+        },
+        "wrist_drop": {
+          "l1": 0.7824875824891916,
+          "relative_degradation_pct": 43.83951972179973,
+          "prediction_drift_l1": 0.6044558976126956,
+          "tail_head_ratio": 0.9584623881031799,
+          "endpoint_amplification": 0.9459376416353402,
+          "delta_action_l1": 0.23725039967640574
+        }
+      },
+      "A+B+C": {
+        "clean": {
+          "l1": 0.4466794037856248,
+          "relative_degradation_pct": 0.0,
+          "prediction_drift_l1": 0.0,
+          "tail_head_ratio": 1.0170283815558905,
+          "endpoint_amplification": 1.0306357310321679,
+          "delta_action_l1": 0.23158803179674162
+        },
+        "dark": {
+          "l1": 0.4663007311563027,
+          "relative_degradation_pct": 4.392709223748947,
+          "prediction_drift_l1": 0.19160621280001836,
+          "tail_head_ratio": 0.9913325909851273,
+          "endpoint_amplification": 0.9939120791890724,
+          "delta_action_l1": 0.2382531892552487
+        },
+        "bright": {
+          "l1": 0.4855807977120674,
+          "relative_degradation_pct": 8.709018951120594,
+          "prediction_drift_l1": 0.20598044450601066,
+          "tail_head_ratio": 1.0240405965797945,
+          "endpoint_amplification": 1.0412481387735233,
+          "delta_action_l1": 0.24083598271776996
+        },
+        "low_contrast": {
+          "l1": 0.4807384484560622,
+          "relative_degradation_pct": 7.6249418222075205,
+          "prediction_drift_l1": 0.22597716100229812,
+          "tail_head_ratio": 0.9899900669557967,
+          "endpoint_amplification": 0.9875977735785341,
+          "delta_action_l1": 0.2404981489838077
+        },
+        "warm_color": {
+          "l1": 0.46297386680919883,
+          "relative_degradation_pct": 3.6479100861776637,
+          "prediction_drift_l1": 0.17297522628734946,
+          "tail_head_ratio": 1.0068034686594127,
+          "endpoint_amplification": 1.0118496560226806,
+          "delta_action_l1": 0.23788852161125087
+        },
+        "blur": {
+          "l1": 0.5387812045245071,
+          "relative_degradation_pct": 20.619218159224715,
+          "prediction_drift_l1": 0.3747453063173645,
+          "tail_head_ratio": 0.9564044562243381,
+          "endpoint_amplification": 0.9524113676185344,
+          "delta_action_l1": 0.25271387216405816
+        },
+        "noise": {
+          "l1": 0.5065975519091007,
+          "relative_degradation_pct": 13.414128257463265,
+          "prediction_drift_l1": 0.25898837097762234,
+          "tail_head_ratio": 0.9894519505715205,
+          "endpoint_amplification": 0.9858428255323972,
+          "delta_action_l1": 0.2450624491052138
+        },
+        "camera_shift": {
+          "l1": 0.5898393563716607,
+          "relative_degradation_pct": 32.04982172286206,
+          "prediction_drift_l1": 0.45203551830052274,
+          "tail_head_ratio": 0.9932663037520459,
+          "endpoint_amplification": 1.0024955323893219,
+          "delta_action_l1": 0.2538544952672426
+        },
+        "center_occlusion": {
+          "l1": 0.5827206325136918,
+          "relative_degradation_pct": 30.456123021368885,
+          "prediction_drift_l1": 0.4753346119970345,
+          "tail_head_ratio": 1.005163120332851,
+          "endpoint_amplification": 1.0076576654289298,
+          "delta_action_l1": 0.2505854153074888
+        },
+        "static_drop": {
+          "l1": 0.5665643248442968,
+          "relative_degradation_pct": 26.839142356384183,
+          "prediction_drift_l1": 0.47473899528485713,
+          "tail_head_ratio": 1.0959942753227614,
+          "endpoint_amplification": 1.1228668155800714,
+          "delta_action_l1": 0.23993796275740573
+        },
+        "wrist_drop": {
+          "l1": 0.673322691094064,
+          "relative_degradation_pct": 50.73958758510662,
+          "prediction_drift_l1": 0.5664699437620639,
+          "tail_head_ratio": 0.9477640265653777,
+          "endpoint_amplification": 0.9496493962074134,
+          "delta_action_l1": 0.2381081026194974
+        }
+      }
+    },
+    "abc_checkpoint_l1": {
+      "10k": 0.420978486686945,
+      "20k": 0.4085161412134767,
+      "30k": 0.40784005805850027
+    }
+  },
+  "interpretation_limits": [
+    "B-only and A+B+C use different training steps and LR schedules.",
+    "Task2 metrics are offline teacher-forced action errors, not rollout success.",
+    "Object B/C have no multi-view ground truth; no PSNR or Chamfer is claimed."
+  ]
+}

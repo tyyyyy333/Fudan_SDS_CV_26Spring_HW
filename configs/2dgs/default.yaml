@@ -1,0 +1,35 @@
+# 2D Gaussian Splatting training hyperparameters
+# Used by external/2d-gaussian-splatting/train.py
+#
+# This file is read by our pipeline to generate the command-line arguments
+# passed to the official 2DGS training script.
+#
+# Reference: https://github.com/hbb1/2d-gaussian-splatting
+
+# ---- Model ----
+sh_degree: 3
+
+# ---- Optimization ----
+iterations: 30000
+position_lr_init: 0.00016
+position_lr_final: 1.6e-06
+position_lr_delay_mult: 0.01
+position_lr_max_steps: 30000
+feature_lr: 0.0025
+opacity_lr: 0.05
+scaling_lr: 0.005
+rotation_lr: 0.001
+
+# ---- Loss ----
+lambda_dssim: 0.2
+
+# ---- Densification ----
+densification_interval: 100
+opacity_reset_interval: 3000
+densify_from_iter: 500
+densify_until_iter: 15000
+densify_grad_threshold: 0.0002
+
+# ---- Data ----
+resolution: 1
+eval: true

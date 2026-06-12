@@ -1,0 +1,32 @@
+# LeRobot ACT training configuration for CALVIN
+# Used by external/lerobot/lerobot/scripts/train.py
+#
+# Pass this config via Hydra CLI overrides or save as a Hydra config.
+# Our pipeline generates the CLI arguments from hw3_default.json.
+
+policy: act
+
+dataset:
+  # index_path is injected by the pipeline
+  index_path: PLACEHOLDER
+
+training:
+  batch_size: 32
+  lr: 0.0001
+  epochs: 20
+  output_dir: PLACEHOLDER
+
+policy_cfg:
+  chunk_size: 100
+  n_encoder_layers: 4
+  n_decoder_layers: 4
+  hidden_dim: 512
+  n_heads: 8
+  dim_feedforward: 2048
+  dropout: 0.1
+
+# WandB logging
+wandb:
+  mode: online
+  project: cv-hw3
+  group: task2-act

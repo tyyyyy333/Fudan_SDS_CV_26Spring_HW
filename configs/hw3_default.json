@@ -1,0 +1,58 @@
+{
+  "external_dir": "external",
+  "outputs": {
+    "task1": "outputs/task1",
+    "task2": "outputs/task2"
+  },
+  "task1": {
+    "objects": {
+      "object_a": {
+        "source": "data/task1/object_a/current",
+        "output": "outputs/task1/final/objects/object_a/model"
+      },
+      "object_b": {
+        "prompt": "a delicious hamburger",
+        "output": "outputs/task1/final/objects/object_b/training"
+      },
+      "object_c": {
+        "image": "data/task1/object_c/rgba.png",
+        "output": "outputs/task1/final/objects/object_c/training"
+      }
+    },
+    "background": {
+      "source": "data/background/kitchen",
+      "output": "outputs/task1/final/environment/kitchen_2dgs"
+    },
+    "scene": {
+      "manifest": "outputs/task1/final/scene/scene_manifest.json",
+      "render_output": "outputs/task1/final/scene/fused_scene_360.mp4"
+    }
+  },
+  "task2": {
+    "calvin_root": "data/calvin",
+    "environments": {
+      "A": "data/calvin/A",
+      "B": "data/calvin/B",
+      "C": "data/calvin/C",
+      "D": "data/calvin/D"
+    },
+    "experiments": {
+      "single_b": {
+        "train_envs": ["B"],
+        "eval_env": "D",
+        "output": "outputs/task2/runs/task2_single_b_actual40g_b512_c10_w8_5k/single_b_train"
+      },
+      "abc_to_d": {
+        "train_envs": ["A", "B", "C"],
+        "eval_env": "D",
+        "output": "outputs/task2/runs/task2_abc_scheduler_b512_c10_w8_30k/abc_to_d_train"
+      }
+    },
+    "act": {
+      "batch_size": 512,
+      "learning_rate": 0.0001,
+      "epochs": 30,
+      "chunk_size": 10
+    }
+  }
+}

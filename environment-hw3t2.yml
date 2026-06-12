@@ -1,0 +1,24 @@
+name: hw3t2
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - ffmpeg
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu121
+      - torch==2.5.1+cu121
+      - torchvision==0.20.1+cu121
+      - numpy==1.26.4
+      - datasets==4.8.5
+      - transformers==5.4.0
+      - accelerate==1.13.0
+      - pandas==2.3.3
+      - pillow==11.3.0
+      - av==15.1.0
+      - huggingface-hub
+      - safetensors
+      - wandb
+      - pytest
+
+# LeRobot is loaded from external/lerobot/src by the official entrypoints.

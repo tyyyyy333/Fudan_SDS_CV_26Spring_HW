@@ -1,0 +1,38 @@
+name: hw3t1
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.10
+  - pip
+  - cmake
+  - ninja
+  - ffmpeg
+  - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cu121
+      - torch==2.3.1+cu121
+      - torchvision==0.18.1+cu121
+      - numpy==2.2.6
+      - scipy==1.15.3
+      - Pillow==12.1.1
+      - opencv-python==4.13.0.92
+      - scikit-image==0.25.2
+      - matplotlib==3.10.9
+      - pandas==2.3.3
+      - PyYAML==6.0.3
+      - plyfile
+      - rembg
+      - tensorboard
+      - wandb
+      - diffusers
+      - transformers
+      - accelerate
+      - huggingface-hub
+      - pytorch-lightning
+      - imageio-ffmpeg
+      - PyMuPDF
+      - pytest
+
+# CUDA extensions and external repositories are initialized by:
+# bash scripts/entrypoints/setup/bootstrap_external.sh

@@ -1,0 +1,51 @@
+# Large outputs
+outputs/
+logs/
+*.nohup.log
+*.mp4
+
+# Checkpoints
+*.ckpt
+*.pth
+*.safetensors
+*.ply
+*.npz
+*.obj
+*.mtl
+
+# Python
+__pycache__/
+*.pyc
+.eggs/
+*.egg-info/
+
+# Conda envs
+pf-a100/
+minimind/
+hw3t1/
+hw3t2/
+
+# IDE
+.vscode/
+.idea/
+
+# Data
+data/calvin_hf_fast_40g/
+data/calvin_hf/
+data/task1/*/
+
+# Wandb
+wandb/
+outputs/task2/wandb/
+
+# Misc
+.DS_Store
+*.aux
+*.log
+*.out
+*.toc
+*.bbl
+*.blg
+*.synctex*
+*.fdb_latexmk
+*.fls

@@ -1,0 +1,37 @@
+# threestudio text-to-3D configuration template
+# Used by external/threestudio/launch.py for object_b
+#
+# This is a minimal override config; threestudio's own defaults fill in
+# the rest (model architecture, SDS loss settings, etc.).
+#
+# Reference: https://github.com/threestudio-project/threestudio
+
+# ---- System ----
+# Override these via CLI: system.prompt_processor.prompt=... trial_dir=...
+
+system:
+  prompt_processor:
+    prompt: "PLACEHOLDER"  # replaced by pipeline from hw3_default.json
+
+# ---- Model (Stable-Dreamfusion / ProlificDreamer style) ----
+model:
+  backbone: "stabilityai/stable-diffusion-2-1-base"
+  guidance_scale: 100.0
+  max_step_percent: 0.98
+  min_step_percent: 0.02
+
+# ---- Geometry (implicit → mesh export) ----
+geometry:
+  radius: 1.0
+  isosurface_resolution: 128
+  isosurface_threshold: 10.0
+
+# ---- Material ----
+material:
+  ambient_only_steps: 1000
+
+# ---- Training ----
+trainer:
+  max_steps: 10000
+  log_every_n_steps: 50
+  ckpt_every_n_steps: 1000
