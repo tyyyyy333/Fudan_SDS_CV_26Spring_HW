@@ -35,8 +35,8 @@ for path in [LEROBOT_SRC, CALVIN_ROOT, CALVIN_MODELS, CALVIN_ENV]:
 
 DEFAULT_CHECKPOINT = (
     ROOT
-    / "outputs/task2/runs/task2_abc_scheduler_b512_c10_w8_30k"
-    / "abc_to_d_train/checkpoints/030000/pretrained_model"
+    / "outputs/task2/runs/task2_fair_abc_10k_cosine_b256_c10_s1000"
+    / "abc_to_d_train/checkpoints/010000/pretrained_model"
 )
 
 

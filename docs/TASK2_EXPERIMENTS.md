@@ -36,17 +36,22 @@ python scripts/build_calvin_fast_subset.py \
 
 两个 checkpoint 使用相同 ACT 架构：ResNet-18、hidden dim 512、8 heads、
 4 层 encoder、1 层 decoder、latent dim 32、KL weight 10、chunk size 10、
-batch 512、seed 1000。
+batch 256、seed 1000。
 
-| 配置   | 数据  | Steps | LR schedule        |
-| ------ | ----- | ----: | ------------------ |
-| B-only | B     |  5000 | fixed              |
-| A+B+C  | A+B+C | 30000 | 1k warmup + cosine |
+| 配置   | 数据  | Steps | LR schedule |
+| ------ | ----- | ----: | ----------- |
+| B-only | B     | 10000 | 500 warmup + cosine to `1e-5` |
+| A+B+C  | A+B+C | 10000 | 500 warmup + cosine to `1e-5` |
 
-最终比较并非严格的数据单变量实验，因为步数和调度器不同。`17.60%` 只能解释为
-两个最终配置的端到端差异，不能全部归因于环境多样性。A+B+C 的 10k/20k/30k
-D 抽样 Action L1 为 0.42098/0.40852/0.40784，后段已接近饱和，但仍不能替代
-缺失的 B-only 30k 控制组。
+两组均执行 10000 次参数更新、每步 256 个样本，共处理 256 万训练样本；优化器、
+500-step warmup、cosine decay、梯度裁剪、图像预处理、随机种子和保存频率完全相同。公平性由
+`scripts/audit_task2_fairness.py` 直接比较两个 checkpoint 的 `train_config.json`。
+唯一允许的差异是 B-only 使用环境 B，而 A+B+C 使用环境 A、B、C。
+
+早期实验采用 B-only 5k/fixed 与 A+B+C 30k/cosine，完整 D Action L1
+分别为 0.508989 和 0.419402。该结果混合了数据范围、训练步数和调度器，不再作为
+正式结论；指标与图保存在
+`outputs/task2/experiments/unfair_b5k_vs_abc30k/`，用于说明为何必须重做控制实验。
 
 ## 完整 D Zero-shot 动作误差
 
@@ -54,33 +59,33 @@ D 抽样 Action L1 为 0.42098/0.40852/0.40784，后段已接近饱和，但仍�
 `outputs/task2/zero_shot_d_action_error_full/metrics.json`，属于 92274 样本的
 教师强制离线动作误差，不是 simulator rollout success rate。
 
-| 配置             |          Action L1 |         Total loss |                  KLD |
-| ---------------- | -----------------: | -----------------: | -------------------: |
-| B-only 5k/fixed  |           0.508989 |           0.510606 |           0.00016165 |
-| A+B+C 30k/cosine | **0.419402** | **0.419420** | **0.00000176** |
+| 配置              | Action L1 | Total loss | KLD |
+| ----------------- | --------: | ---------: | --: |
+| B-only 10k/cosine |  0.509418 |   0.509554 | 0.00001358 |
+| A+B+C 10k/cosine  | **0.432757** | **0.432869** | **0.00001120** |
 
-最终配置 Action L1 差异为 17.6010%，总损失差异为 17.8585%。
+严格同参下，A+B+C 的 Action L1 和总损失均降低 15.05%。
 
 ## Action Chunking 与视觉偏移
 
 受控分析使用 B/D 各 8192 个样本、chunk size 10，并保持机器人状态和标签不变，
 只扰动输入图像。主要结果：
 
-- clean D L1：`0.544000 -> 0.446679`
-- arm cosine：`0.535381 -> 0.652701`
-- gripper sign accuracy：`90.758% -> 92.445%`
-- tail/head ratio：`0.999824 -> 1.017028`
-- prediction/GT variation ratio：`0.425275 -> 0.584879`
-- 外观偏移平均绝对 L1 优势：14.853%
-- 模糊/噪声平均绝对 L1 优势：17.725%
-- 相机平移/中心遮挡平均绝对 L1 优势：1.553%
-- 相机缺失平均绝对 L1 优势：7.993%
+- clean D L1：`0.537354 -> 0.462663`
+- arm cosine：`0.552400 -> 0.649600`
+- gripper sign accuracy：`90.729% -> 92.854%`
+- tail/head ratio：`1.020170 -> 1.018037`
+- prediction/GT variation ratio：`0.506615 -> 0.405908`
+- 外观偏移平均绝对 L1 优势：11.515%
+- 模糊/噪声平均绝对 L1 优势：10.124%
+- 相机平移/中心遮挡平均绝对 L1 优势：4.795%
+- 相机缺失平均绝对 L1 优势：4.852%
 
 误差在十个 chunk 位置上没有递归爆炸，说明联合解码提供了短时一致性。但当前配置
 连续执行 10 步且没有 temporal ensemble；错误视觉条件会共同污染整个 chunk，
 期间无法利用新观测纠正。Action Chunking 能降低 chunk 内递归误差，不会自动获得
-相机几何不变性。静态相机缺失时 A+B+C 的 tail/head ratio 增至 1.096；腕部相机
-缺失造成最大绝对误差，说明近场视觉既关键，也是主要 domain-shift 通道。
+相机几何不变性。腕部相机缺失造成最大绝对误差；A+B+C 的误差仍较低，但相对自身
+clean D 退化 63.75%，说明近场视觉既关键，也是主要 domain-shift 通道。
 
 官方 CALVIN 仿真和 validation 资源已因空间不足删除，因此没有闭环 success rate。
 恢复 simulator、scene、task oracle 和 rollout evaluator 后才能运行

@@ -88,12 +88,12 @@ def main() -> None:
         (ROOT / "outputs/task2/action_chunking_robustness/metrics.json").read_text()
     )
     chunk = chunk_data["results"]
-    checkpoints = json.loads(
-        (ROOT / "outputs/task2/experiments/eval_d_offline_scheduler/metrics.json").read_text()
-    )["results"]
+    fairness = json.loads(
+        (ROOT / "outputs/task2/fair_comparison/config_audit.json").read_text()
+    )
 
-    b_full = task2_full["single_b"]
-    abc_full = task2_full["abc_cosine_30k"]
+    b_full = task2_full["b_only_fair_10k"]
+    abc_full = task2_full["abc_fair_10k"]
     b_clean = chunk["B-only"]["D"]["clean"]
     abc_clean = chunk["A+B+C"]["D"]["clean"]
 
@@ -195,14 +195,10 @@ def main() -> None:
             "paired_clean_d": chunk_data["derived"]["clean_D_model_difference"],
             "visual_shift_b_to_d": chunk_data["visual_shift_B_to_D"],
             "controlled_perturbations": chunk_data["derived"]["perturbation"],
-            "abc_checkpoint_l1": {
-                "10k": checkpoints["abc_cosine_10k"]["l1_loss"],
-                "20k": checkpoints["abc_cosine_20k"]["l1_loss"],
-                "30k": checkpoints["abc_cosine_30k"]["l1_loss"],
-            },
+            "fairness_audit": fairness,
         },
         "interpretation_limits": [
-            "B-only and A+B+C use different training steps and LR schedules.",
+            "B-only and A+B+C differ only in the training dataset scope.",
             "Task2 metrics are offline teacher-forced action errors, not rollout success.",
             "Object B/C have no multi-view ground truth; no PSNR or Chamfer is claimed.",
         ],
@@ -212,12 +208,8 @@ def main() -> None:
     assert audit["task1"]["object_a"]["gaussians_raw"] == 66136
     assert audit["task1"]["object_a"]["gaussians_supported"] == 42800
     assert audit["task2"]["full_d"]["examples"] == 92274
-    assert abs(
-        audit["task2"]["full_d"]["l1_relative_improvement_percent"] - 17.601031
-    ) < 1e-5
-    assert (
-        audit["task2"]["paired_clean_d"]["ci95_low"] > 0
-    ), "Paired clean-D confidence interval unexpectedly crosses zero"
+    assert audit["task2"]["fairness_audit"]["fair"]
+    assert b_clean["examples"] == abc_clean["examples"]
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(

@@ -40,18 +40,18 @@
       "single_b": {
         "train_envs": ["B"],
         "eval_env": "D",
-        "output": "outputs/task2/runs/task2_single_b_actual40g_b512_c10_w8_5k/single_b_train"
+        "output": "outputs/task2/runs/task2_fair_b_10k_cosine_b256_c10_s1000/single_b_train"
       },
       "abc_to_d": {
         "train_envs": ["A", "B", "C"],
         "eval_env": "D",
-        "output": "outputs/task2/runs/task2_abc_scheduler_b512_c10_w8_30k/abc_to_d_train"
+        "output": "outputs/task2/runs/task2_fair_abc_10k_cosine_b256_c10_s1000/abc_to_d_train"
       }
     },
     "act": {
-      "batch_size": 512,
+      "batch_size": 256,
       "learning_rate": 0.0001,
-      "epochs": 30,
+      "epochs": 10,
       "chunk_size": 10
     }
   }

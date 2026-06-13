@@ -43,7 +43,7 @@ def test_build_act_commands_include_index_and_metrics_paths(tmp_path):
     assert train_command[:5] == ["conda", "run", "-n", "hw3t2", "lerobot-train"]
     assert ["--policy.type", "act"] == train_command[5:7]
     assert "--dataset.root" in train_command
-    assert ["--batch_size", "512"] == train_command[
+    assert ["--batch_size", "256"] == train_command[
         train_command.index("--batch_size") : train_command.index("--batch_size") + 2
     ]
     assert eval_command[:3] == ["python", "-m", "lerobot.scripts.eval"]

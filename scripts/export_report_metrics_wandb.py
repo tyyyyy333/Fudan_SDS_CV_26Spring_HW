@@ -9,23 +9,39 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from pathlib import Path
 
 import wandb
 
 
 ROOT = Path(__file__).resolve().parents[1]
+TRAIN_LOGS = {
+    "B-only": ROOT / "logs/task2_fair_b_10k_cosine.log",
+    "A+B+C": ROOT / "logs/task2_fair_abc_10k_cosine.log",
+}
+
+
+def training_points(path: Path):
+    pattern = re.compile(
+        r"step:\S+ .*?loss:([0-9.]+).*?grdn:([0-9.]+).*?lr:([0-9.eE+-]+)"
+    )
+    record_index = 0
+    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+        match = pattern.search(line)
+        if match:
+            record_index += 1
+            yield (
+                record_index * 20,
+                float(match.group(1)),
+                float(match.group(2)),
+                float(match.group(3)),
+            )
 
 
 def main() -> None:
     os.environ.setdefault("WANDB_MODE", "offline")
     os.environ.setdefault("WANDB_DIR", str(ROOT / "outputs/task2/wandb"))
-    eval_metrics = json.loads(
-        (
-            ROOT
-            / "outputs/task2/experiments/eval_d_offline_scheduler/metrics.json"
-        ).read_text()
-    )
     full_metrics = json.loads(
         (ROOT / "outputs/task2/zero_shot_d_action_error_full/metrics.json").read_text()
     )
@@ -33,9 +49,39 @@ def main() -> None:
         (ROOT / "outputs/task2/action_chunking_robustness/metrics.json").read_text()
     )
 
+    for model, log_path in TRAIN_LOGS.items():
+        run = wandb.init(
+            project="hw3-task2",
+            group="fair-act-10k",
+            name=f"{model.lower().replace('+', '').replace('-', '_')}-10k",
+            reinit=True,
+            config={
+                "model": model,
+                "training_steps": 10000,
+                "batch_size": 256,
+                "learning_rate": 1e-4,
+                "scheduler": "500-step warmup + cosine to 1e-5",
+                "seed": 1000,
+                "chunk_size": 10,
+            },
+        )
+        for step, loss, grad_norm, lr in training_points(log_path):
+            run.log(
+                {
+                    "train/loss": loss,
+                    "train/grad_norm": grad_norm,
+                    "train/learning_rate": lr,
+                },
+                step=step,
+            )
+        run.finish()
+
+    full = full_metrics["results"]
     run = wandb.init(
         project="hw3-task2",
-        name="act-checkpoint-reevaluation",
+        group="fair-act-10k",
+        name="fair-10k-d-evaluation",
+        reinit=True,
         config={
             "metric_origin": "post-training checkpoint re-evaluation",
             "held_out_environment": "D",
@@ -44,27 +90,18 @@ def main() -> None:
             "samples_full_d": 92274,
         },
     )
-    scheduler = eval_metrics["results"]
-    for step, key in [(10000, "abc_cosine_10k"), (20000, "abc_cosine_20k"), (30000, "abc_cosine_30k")]:
-        values = scheduler[key]
-        run.log(
-            {
-                "checkpoint_step": step,
-                "validation_D/total_loss": values["loss"],
-                "validation_D/action_l1": values["l1_loss"],
-                "validation_D/kld": values["kld_loss"],
-            },
-            step=step,
-        )
-
-    full = full_metrics["results"]
     table = wandb.Table(columns=["model", "training_step", "D_action_l1", "D_total_loss"])
-    table.add_data("B-only", 5000, full["single_b"]["l1_loss"], full["single_b"]["loss"])
+    table.add_data(
+        "B-only",
+        10000,
+        full["b_only_fair_10k"]["l1_loss"],
+        full["b_only_fair_10k"]["loss"],
+    )
     table.add_data(
         "A+B+C",
-        30000,
-        full["abc_cosine_30k"]["l1_loss"],
-        full["abc_cosine_30k"]["loss"],
+        10000,
+        full["abc_fair_10k"]["l1_loss"],
+        full["abc_fair_10k"]["loss"],
     )
     run.log({"full_D_zero_shot": table})
 

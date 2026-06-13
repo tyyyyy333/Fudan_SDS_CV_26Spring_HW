@@ -381,18 +381,18 @@ def make_scene_contact() -> None:
 
 
 def parse_training_log(path: Path) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    pattern = re.compile(r"step:(\d+)K .*?epch:([0-9.]+) loss:([0-9.]+).*?lr:([0-9.eE+-]+)")
-    epochs: list[float] = []
+    pattern = re.compile(r"step:\S+ .*?loss:([0-9.]+).*?lr:([0-9.eE+-]+)")
+    steps: list[float] = []
     losses: list[float] = []
     lrs: list[float] = []
     for line in path.read_text(errors="ignore").splitlines():
         match = pattern.search(line)
         if not match:
             continue
-        epochs.append(float(match.group(2)))
-        losses.append(float(match.group(3)))
-        lrs.append(float(match.group(4)))
-    return np.asarray(epochs), np.asarray(losses), np.asarray(lrs)
+        steps.append(float((len(steps) + 1) * 20))
+        losses.append(float(match.group(1)))
+        lrs.append(float(match.group(2)))
+    return np.asarray(steps), np.asarray(losses), np.asarray(lrs)
 
 
 def moving_average(values: np.ndarray, window: int = 25) -> np.ndarray:
@@ -404,44 +404,33 @@ def moving_average(values: np.ndarray, window: int = 25) -> np.ndarray:
 
 
 def make_task2_training_curve() -> None:
-    log_path = ROOT / "logs/task2_abc_scheduler_b512_c10_w8_30k.nohup.log"
-    if not log_path.exists():
-        metrics_path = ROOT / "outputs/task2/experiments/eval_d_offline_scheduler/metrics.json"
-        if metrics_path.exists():
-            metrics = json.loads(metrics_path.read_text())["results"]
-            keys = ["abc_cosine_10k", "abc_cosine_20k", "abc_cosine_30k"]
-            steps = [10, 20, 30]
-            losses = [metrics[key]["loss"] for key in keys]
-            l1_values = [metrics[key]["l1_loss"] for key in keys]
-            fig, ax = plt.subplots(figsize=(7.4, 3.5), dpi=220)
-            ax.plot(steps, losses, marker="o", color="#1F5A94", linewidth=1.5, label="Total ACT loss")
-            ax.plot(steps, l1_values, marker="s", color="#B24C32", linewidth=1.2, label="Action L1")
-            ax.set_xlabel("A+B+C cosine checkpoint step (k)")
-            ax.set_ylabel("D teacher-forced loss")
-            ax.set_xticks(steps)
-            ax.grid(alpha=0.22)
-            ax.legend(frameon=False, fontsize=8)
-            fig.tight_layout()
-            fig.savefig(OUT / "task2_training_curve.png", bbox_inches="tight")
-            plt.close(fig)
-            return
+    logs = {
+        "B-only": ROOT / "logs/task2_fair_b_10k_cosine.log",
+        "A+B+C": ROOT / "logs/task2_fair_abc_10k_cosine.log",
+    }
+    missing = [path.name for path in logs.values() if not path.exists()]
+    if missing:
         fig, ax = plt.subplots(figsize=(7.4, 3.5), dpi=220)
-        ax.text(0.5, 0.5, f"missing training log\n{log_path.name}", ha="center", va="center")
+        ax.text(0.5, 0.5, f"missing training log\n{', '.join(missing)}", ha="center", va="center")
         ax.axis("off")
         fig.savefig(OUT / "task2_training_curve.png", bbox_inches="tight")
         plt.close(fig)
         return
-    epochs, losses, lrs = parse_training_log(log_path)
-    fig, left = plt.subplots(figsize=(7.4, 3.5), dpi=220)
-    left.plot(epochs, moving_average(losses), color="#1F5A94", linewidth=1.5, label="Smoothed training loss")
-    left.set_xlabel("Effective epochs over A+B+C subset")
-    left.set_ylabel("ACT training loss", color="#1F5A94")
-    left.tick_params(axis="y", labelcolor="#1F5A94")
-    left.grid(alpha=0.22)
-    right = left.twinx()
-    right.plot(epochs, lrs, color="#B24C32", linewidth=1.2, label="Learning rate")
-    right.set_ylabel("Learning rate", color="#B24C32")
-    right.tick_params(axis="y", labelcolor="#B24C32")
+    colors = {"B-only": "#8C8C8C", "A+B+C": "#276B9A"}
+    fig, ax = plt.subplots(figsize=(7.4, 3.5), dpi=220)
+    for label, path in logs.items():
+        steps, losses, _ = parse_training_log(path)
+        ax.plot(
+            steps,
+            moving_average(losses, window=15),
+            color=colors[label],
+            linewidth=1.5,
+            label=label,
+        )
+    ax.set_xlabel("Optimization step")
+    ax.set_ylabel("Smoothed ACT training loss")
+    ax.grid(alpha=0.22)
+    ax.legend(frameon=False, fontsize=8)
     fig.tight_layout()
     fig.savefig(OUT / "task2_training_curve.png", bbox_inches="tight")
     plt.close(fig)
@@ -452,25 +441,17 @@ def make_task2_evaluation() -> None:
     if not metrics_path.exists():
         metrics_path = ROOT / "outputs/task2/experiments/eval_d_offline_scheduler/metrics.json"
     metrics = json.loads(metrics_path.read_text())["results"]
-    keys = [key for key in ["single_b", "abc_cosine_30k"] if key in metrics]
-    if len(keys) < 2:
-        keys = ["single_b", "abc_fixed_lr_10k", "abc_cosine_10k", "abc_cosine_20k", "abc_cosine_30k"]
+    keys = ["b_only_fair_10k", "abc_fair_10k"]
     labels_map = {
-        "single_b": "B only\n5k",
-        "abc_fixed_lr_10k": "ABC fixed\n10k",
-        "abc_cosine_10k": "ABC cosine\n10k",
-        "abc_cosine_20k": "ABC cosine\n20k",
-        "abc_cosine_30k": "ABC cosine\n30k",
+        "b_only_fair_10k": "B only\n10k",
+        "abc_fair_10k": "A+B+C\n10k",
     }
     labels = [labels_map[key] for key in keys]
     values = [metrics[key]["loss"] for key in keys]
     l1_values = [metrics[key]["l1_loss"] for key in keys]
     colors_map = {
-        "single_b": "#A6A6A6",
-        "abc_fixed_lr_10k": "#D8A24A",
-        "abc_cosine_10k": "#5B9BD5",
-        "abc_cosine_20k": "#3C78B5",
-        "abc_cosine_30k": "#245887",
+        "b_only_fair_10k": "#8C8C8C",
+        "abc_fair_10k": "#276B9A",
     }
     colors = [colors_map[key] for key in keys]
 
@@ -480,7 +461,7 @@ def make_task2_evaluation() -> None:
     ax.plot(positions, l1_values, color="#222222", marker="o", linewidth=1.2, label="Action L1")
     ax.set_xticks(positions, labels)
     ax.set_ylabel("Held-out D teacher-forced loss")
-    ax.set_ylim(0.35, 0.55)
+    ax.set_ylim(max(0.0, min(values + l1_values) * 0.85), max(values + l1_values) * 1.18)
     ax.grid(axis="y", alpha=0.22)
     ax.legend(frameon=False, fontsize=8)
     for x, value in zip(positions, values):

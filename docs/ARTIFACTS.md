@@ -49,6 +49,6 @@ GitHub 不保存：
 
 - CALVIN 40G 解码数据或其完整分片
 - `subset_manifest.json` 和随机种子说明
-- B-only 5k 与 A+B+C 30k checkpoint
+- B-only 10k/cosine 与 A+B+C 10k/cosine 公平对照 checkpoint
 - A 30k 2DGS PLY、B checkpoint/mesh、C coarse/fine checkpoint/mesh
 - kitchen 2DGS 7k PLY

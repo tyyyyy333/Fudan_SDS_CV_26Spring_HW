@@ -11,8 +11,9 @@
 | `scripts/entrypoints/task1/train_object_c_fine.sh`   | `hw3t1` | C DMTet fine    |
 | `scripts/entrypoints/task1/preview_fusion.sh`        | `hw3t1` | 12 帧预览       |
 | `scripts/entrypoints/task1/finish_all.sh`            | `hw3t1` | 360 帧正式结果  |
-| `scripts/entrypoints/task2/train_b_only.sh`          | `hw3t2` | B-only 5k       |
-| `scripts/entrypoints/task2/train_abc.sh`             | `hw3t2` | ABC 30k         |
+| `scripts/entrypoints/task2/train_b_only.sh`          | `hw3t2` | B-only fair 10k |
+| `scripts/entrypoints/task2/train_abc.sh`             | `hw3t2` | ABC fair 10k    |
+| `scripts/entrypoints/task2/evaluate_fair_10k.sh`     | `hw3t2` | 公平审计与 D 评价 |
 | `scripts/evaluate_task2_d_offline.py`                | `hw3t2` | 完整 D 动作误差 |
 | `scripts/analyze_task2_action_chunking.py`           | `hw3t2` | chunk 鲁棒性    |
 | `scripts/audit_report_metrics.py`                    | `hw3t1` | 报告数字审计    |

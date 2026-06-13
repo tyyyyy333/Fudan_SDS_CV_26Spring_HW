@@ -30,11 +30,20 @@ from lerobot.utils.constants import ACTION, POLICY_PREPROCESSOR_DEFAULT_NAME  # 
 
 
 RUNS = {
-    "single_b": ROOT
-    / "outputs/task2/runs/task2_single_b_actual40g_b512_c10_w8_5k/single_b_train/checkpoints/005000/pretrained_model",
-    "abc_cosine_30k": ROOT
-    / "outputs/task2/runs/task2_abc_scheduler_b512_c10_w8_30k/abc_to_d_train/checkpoints/030000/pretrained_model",
+    "b_only_fair_10k": ROOT
+    / "outputs/task2/runs/task2_fair_b_10k_cosine_b256_c10_s1000"
+    / "single_b_train/checkpoints/010000/pretrained_model",
+    "abc_fair_10k": ROOT
+    / "outputs/task2/runs/task2_fair_abc_10k_cosine_b256_c10_s1000"
+    / "abc_to_d_train/checkpoints/010000/pretrained_model",
 }
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
 
 
 def evaluate_one(
@@ -95,8 +104,8 @@ def evaluate_one(
 
     return {
         "name": name,
-        "checkpoint": str(checkpoint.relative_to(ROOT)),
-        "eval_dataset": str(Path(dataset.root).relative_to(ROOT)),
+        "checkpoint": display_path(checkpoint),
+        "eval_dataset": display_path(Path(dataset.root)),
         "batches": batches,
         "examples": total_examples,
         "loss": total_loss / total_examples,
@@ -162,7 +171,7 @@ def main() -> None:
     }
     summary = {
         "note": "Offline held-out D teacher-forced ACT loss. This is not simulator rollout success rate.",
-        "d_root": str(args.d_root.relative_to(ROOT)),
+        "d_root": display_path(args.d_root),
         "batch_size": args.batch_size,
         "num_workers": args.num_workers,
         "max_batches": args.max_batches,

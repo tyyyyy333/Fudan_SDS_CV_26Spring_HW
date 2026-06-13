@@ -6,17 +6,37 @@ cd "$ROOT"
 
 CONDA_ENV="${CONDA_ENV:-hw3t2}"
 DATA_ROOT="${DATA_ROOT:-data/calvin_hf_fast_40g/huiwon_calvin_task_ABC_D}"
-RUN_ID="${RUN_ID:-task2_single_b_actual40g_b512_c10_w8_5k}"
+RUN_ID="${RUN_ID:-task2_fair_b_10k_cosine_b256_c10_s1000}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs/task2/runs/${RUN_ID}/single_b_train}"
-STEPS="${STEPS:-5000}"
-BATCH_SIZE="${BATCH_SIZE:-512}"
+LOCK_FILE="${LOCK_FILE:-/tmp/hw3_task2_fair_b_10k.lock}"
+
+exec 9>"$LOCK_FILE"
+if ! flock -n 9; then
+  echo "B-only fair 10k training is already running: $LOCK_FILE"
+  exit 0
+fi
+
+STEPS="${STEPS:-10000}"
+BATCH_SIZE="${BATCH_SIZE:-256}"
 CHUNK_SIZE="${CHUNK_SIZE:-10}"
-NUM_WORKERS="${NUM_WORKERS:-8}"
+NUM_WORKERS="${NUM_WORKERS:-16}"
+PREFETCH_FACTOR="${PREFETCH_FACTOR:-2}"
+SAVE_FREQ="${SAVE_FREQ:-10000}"
+LOG_FREQ="${LOG_FREQ:-20}"
 SEED="${SEED:-1000}"
+
+LR="${LR:-0.0001}"
+WEIGHT_DECAY="${WEIGHT_DECAY:-0.0001}"
+GRAD_CLIP_NORM="${GRAD_CLIP_NORM:-10}"
+WARMUP_STEPS="${WARMUP_STEPS:-500}"
+DECAY_STEPS="${DECAY_STEPS:-$STEPS}"
+DECAY_LR="${DECAY_LR:-0.00001}"
+mkdir -p logs "outputs/task2/runs/${RUN_ID}"
 
 source "$ROOT/scripts/tools/conda_env.sh"
 resolve_conda_env "$CONDA_ENV"
 PYTHON="$CONDA_ENV_PYTHON"
+
 export PYTHONPATH="${ROOT}/external/lerobot/src${PYTHONPATH:+:${PYTHONPATH}}"
 export PYTHONUNBUFFERED=1
 
@@ -28,24 +48,29 @@ export PYTHONUNBUFFERED=1
   --dataset.video_backend pyav \
   --tolerance_s 0.01 \
   --output_dir "$OUTPUT_DIR" \
-  --job_name hw3_single_b_actual40g_b512_5k \
+  --job_name "hw3_fair_b_10k_cosine_b256_c10_s1000" \
   --batch_size "$BATCH_SIZE" \
   --steps "$STEPS" \
   --seed "$SEED" \
   --policy.chunk_size "$CHUNK_SIZE" \
   --policy.n_action_steps "$CHUNK_SIZE" \
   --policy.push_to_hub false \
-  --policy.repo_id hw3_single_b_actual40g_b512_5k_act \
+  --policy.repo_id "hw3_fair_b_10k_cosine_b256_c10_s1000_act" \
   --num_workers "$NUM_WORKERS" \
-  --prefetch_factor 2 \
+  --prefetch_factor "$PREFETCH_FACTOR" \
   --persistent_workers true \
-  --save_freq "$STEPS" \
-  --log_freq 20 \
+  --save_freq "$SAVE_FREQ" \
+  --log_freq "$LOG_FREQ" \
   --wandb.enable false \
   --use_policy_training_preset false \
   --optimizer.type adamw \
-  --optimizer.lr 0.0001 \
-  --optimizer.weight_decay 0.0001 \
-  --optimizer.grad_clip_norm 10 \
+  --optimizer.lr "$LR" \
+  --optimizer.weight_decay "$WEIGHT_DECAY" \
+  --optimizer.grad_clip_norm "$GRAD_CLIP_NORM" \
   --optimizer.betas "[0.9,0.999]" \
-  --optimizer.eps 1e-8
+  --optimizer.eps 1e-8 \
+  --scheduler.type cosine_decay_with_warmup \
+  --scheduler.num_warmup_steps "$WARMUP_STEPS" \
+  --scheduler.num_decay_steps "$DECAY_STEPS" \
+  --scheduler.peak_lr "$LR" \
+  --scheduler.decay_lr "$DECAY_LR"

@@ -43,14 +43,14 @@ from lerobot.processor import PolicyProcessorPipeline  # noqa: E402
 from lerobot.utils.constants import ACTION, POLICY_PREPROCESSOR_DEFAULT_NAME  # noqa: E402
 
 
-DATA_ROOT = ROOT / "data/calvin_hf_fast_40g/huiwon_calvin_task_ABC_D"
+DEFAULT_DATA_ROOT = ROOT / "data/calvin_hf_fast_40g/huiwon_calvin_task_ABC_D"
 CHECKPOINTS = {
     "B-only": ROOT
-    / "outputs/task2/runs/task2_single_b_actual40g_b512_c10_w8_5k"
-    / "single_b_train/checkpoints/005000/pretrained_model",
+    / "outputs/task2/runs/task2_fair_b_10k_cosine_b256_c10_s1000"
+    / "single_b_train/checkpoints/010000/pretrained_model",
     "A+B+C": ROOT
-    / "outputs/task2/runs/task2_abc_scheduler_b512_c10_w8_30k"
-    / "abc_to_d_train/checkpoints/030000/pretrained_model",
+    / "outputs/task2/runs/task2_fair_abc_10k_cosine_b256_c10_s1000"
+    / "abc_to_d_train/checkpoints/010000/pretrained_model",
 }
 ENVIRONMENTS = {
     "B": (1, "local/calvin_task_ABC_D_lerobot_1_4"),
@@ -74,9 +74,16 @@ CONDITION_LABELS = {
 PERTURBATION_CONDITIONS = list(CONDITION_LABELS)
 
 
-def load_dataset(env_name: str, config: PreTrainedConfig) -> LeRobotDataset:
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
+def load_dataset(env_name: str, config: PreTrainedConfig, data_root: Path) -> LeRobotDataset:
     shard, repo_id = ENVIRONMENTS[env_name]
-    root = DATA_ROOT / f"calvin_task_ABC_D_lerobot_{shard}_4"
+    root = data_root / f"calvin_task_ABC_D_lerobot_{shard}_4"
     meta = LeRobotDatasetMetadata(repo_id, root=root)
     return LeRobotDataset(
         repo_id,
@@ -797,6 +804,7 @@ def write_markdown(
 
 def main() -> None:
     parser = argparse.ArgumentParser()
+    parser.add_argument("--data-root", type=Path, default=DEFAULT_DATA_ROOT)
     parser.add_argument(
         "--output-dir", type=Path, default=ROOT / "outputs/task2/action_chunking_robustness"
     )
@@ -809,7 +817,9 @@ def main() -> None:
     args.output_dir.mkdir(parents=True, exist_ok=True)
     get_policy_class("act")
     config = PreTrainedConfig.from_pretrained(next(iter(CHECKPOINTS.values())))
-    datasets = {env_name: load_dataset(env_name, config) for env_name in ENVIRONMENTS}
+    datasets = {
+        env_name: load_dataset(env_name, config, args.data_root) for env_name in ENVIRONMENTS
+    }
     loaders = {
         env_name: make_loader(dataset, args.batch_size, args.num_workers)
         for env_name, dataset in datasets.items()
@@ -830,7 +840,11 @@ def main() -> None:
         all_results[model_name] = model_results
         visual_stats.update(model_visual)
         partial = {
-            "config": vars(args) | {"output_dir": str(args.output_dir)},
+            "config": {
+                **vars(args),
+                "data_root": str(args.data_root),
+                "output_dir": str(args.output_dir),
+            },
             "results": strip_batch_values(all_results),
         }
         (args.output_dir / "partial_metrics.json").write_text(
@@ -850,7 +864,7 @@ def main() -> None:
             "n_action_steps": 10,
             "temporal_ensemble": False,
             "environments": {
-                name: str(Path(dataset.root).relative_to(ROOT)) for name, dataset in datasets.items()
+                name: display_path(Path(dataset.root)) for name, dataset in datasets.items()
             },
             "checkpoints": {name: str(path.relative_to(ROOT)) for name, path in CHECKPOINTS.items()},
             "note": "D is unseen during training. Metrics are offline and are not rollout success rates.",

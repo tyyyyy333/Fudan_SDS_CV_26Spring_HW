@@ -225,29 +225,29 @@ bash scripts/entrypoints/task2/train_b_only.sh
 bash scripts/entrypoints/task2/train_abc.sh
 ```
 
-| 模型   | Batch | Steps | Chunk |       LR | Scheduler          |
-| ------ | ----: | ----: | ----: | -------: | ------------------ |
-| B-only |   512 |  5000 |    10 | `1e-4` | fixed              |
-| A+B+C  |   512 | 30000 |    10 | `1e-4` | 1k warmup + cosine |
+| 模型   | Batch | Steps | Chunk |       LR | Scheduler |
+| ------ | ----: | ----: | ----: | -------: | --------- |
+| B-only |   256 | 10000 |    10 | `1e-4` | 500 warmup + cosine |
+| A+B+C  |   256 | 10000 |    10 | `1e-4` | 500 warmup + cosine |
 
 完整 D zero-shot 动作误差：
 
 ```bash
 conda activate hw3t2
 python scripts/evaluate_task2_d_offline.py \
-  --output outputs/task2/zero_shot_d_action_error_full \
+  --output-dir outputs/task2/zero_shot_d_action_error_full \
   --max-batches 0
 ```
 
-| 模型      |        D Action L1 |         Total loss |
-| --------- | -----------------: | -----------------: |
-| B-only 5k |           0.508989 |           0.510606 |
-| A+B+C 30k | **0.419402** | **0.419420** |
+| 模型        | D Action L1 | Total loss |
+| ----------- | ----------: | ---------: |
+| B-only 10k  |    0.509418 |   0.509554 |
+| A+B+C 10k   | **0.432757** | **0.432869** |
 
-两个最终配置的 Action L1 相差 17.60%。B-only 使用 5k/fixed，A+B+C 使用
-30k/cosine，因此该数字不是只增加多环境数据的严格因果效应。官方 CALVIN 仿真和
-validation rollout 资源已因空间不足删除；题目允许成功率或动作
-误差，本项目报告完整 D 动作误差。
+严格同参下，A+B+C 相对 B-only 将完整 D Action L1 降低 15.05%。两组均为
+10k steps、batch 256、500-step warmup、cosine decay 和 seed 1000，配置审计确认
+唯一差异是训练数据范围。官方 CALVIN 仿真和 validation rollout 资源已因空间不足
+删除；题目允许成功率或动作误差，本项目报告完整 D 动作误差。
 
 Action chunking：
 
