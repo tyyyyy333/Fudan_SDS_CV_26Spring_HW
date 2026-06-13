@@ -1,6 +1,6 @@
 # HW3: 2DGS Scene Construction and CALVIN ACT
 
-- GitHub: [https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW3/HW3](https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW3/HW3)
+- GitHub: [https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW3](https://github.com/tyyyyy333/Fudan_SDS_CV_26Spring_HW/tree/HW3)
 - 数据与模型权重: [https://huggingface.co/datasets/WhySoTy/hw3_calvin_40g](https://huggingface.co/datasets/WhySoTy/hw3_calvin_40g)
 - 最终报告: `docs/report_cvpr/hw3_report.pdf`
 
